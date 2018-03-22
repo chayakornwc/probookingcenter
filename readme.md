@@ -1,4 +1,4 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+
 
 <p align="center">
 <a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
@@ -7,53 +7,203 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
 </p>
 
-## About Laravel
+# Welcome to MVC
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+## What is this project?
+There are plenty of excellent MVC's out there. So why the need for yet another? Simply because they are big and complex. Why use a sledgehammer to crack a nut?
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## The projects aims
+To provide a compact codebase providing the basics for any application. It's designed to be fast. *Really fast.* With the built in profiler you can easily see how fast each fragment of your site is, how much memory it consumes, and how each fragment was initiated.
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+## What does this project have to offer?
+We provide the basics of the MVC, everything from the router, dispatcher, controllers, views, and view helpers. We even have a few components you can make use of, including:
 
-## Learning Laravel
+ * Model ORM
+ * Cache
+ * Event listeners
+ * Formatting of data
+ * Notice messages
+ * Data validation
+ * Store (APC, Cookie, Memcache(d), Request, and Session)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+## Testing
+This project contains a PHPUnit test suite with 64 tests and 194 assertions (all passing).
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Installation
+Checkout a copy of the source files and head over to your app's config in `/Library/MyProject/config.ini` and update the `path`'s to your specific directory structure. You can rename the `MyProject` in the `Library` directory, just make sure you also update the namespace definition in each of your `.php` files.
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Pulse Storm](http://www.pulsestorm.net/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
+## Features and Documentation
 
-## Contributing
+### Routing (Basic)
+We parse URI's such as `/index/hello/my/variables/go/here/foobar` and place it into the GET array. Dumping the  will give you:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    array(
+    	'controller' => 'index',
+    	'action'     => 'hello',
+    	'my'         => 'variables',
+    	'go'         => 'here',
+    	'foobar'     => true
+    )
 
-## Security Vulnerabilities
+This will forward the request onto the `Index` controller and into the `hello` action.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Routing (Advanced)
 
-## License
+If you want to customise your URL's as such that the basic `/controller/action/my/variables/go/here` will not suffice, then you can use the built in `Router`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+#### Example
+
+    // Global configurations
+    include dirname(__FILE__) . '/../Library/global.php';
+
+    // Create new Router instance
+    $router = new Core\Router();
+    $router
+        ->addRoute('Foo')
+        ->setRoute('foo/:bar/:acme')
+        ->setFormat(array(
+            'bar'  => '\d+',
+            'acme' => '[a-z0-9]+')
+        )
+        ->setEndpoint(array(
+            'controller' => 'Foo',
+            'action'     => 'bar')
+        );
+
+    // Start the application, passing in the Router
+    new Core\Front('MyProject', $router);
+
+You can add as many routes as you like. Any variables that you do not specify in the `setFormat` method (which is optional) will use the regex of `[\w\-]+`. The `setEndpoint` method does not require an `action` parameter, but if none is declared then it will use the default `index` action of that controller.
+
+This advanced routing system will use the first declared route that it finds matching the request URL.
+
+### Reverse routing
+
+URL's will often change. Defining them in a single place (the router) will save you having to rewrite them in your View Helpers/Partials. It is also safer because URL encoding will be taken care for you. You can call the `Route` View Helper via:
+
+    $this->view->route(array(
+    	'route'  => 'Foo',
+    	'params' => array(
+    		'bar'  => 1234,
+    		'acme' => 'foobar'
+    	)
+    );
+
+---
+
+### Controllers
+
+Controllers are created in `/Library/MyProject/Controller`, the file name begins with an uppercase letter and ends in a `.php` extension, so `index` would be called `Index.php`.
+
+You can pass variables from the `Controller` to the `View` via:
+
+    public function indexAction() {
+        $this->view->addVariable($name = 'foo', $value = 'bar');
+    }
+
+Which you can then access in the Layout and View Script by simple using the name of the variable you added to the view, such as in the above example: `$foo`
+
+You can interact directly with the `Request` object (data passed by the URL and forms, server variables, and the URL object):
+
+    public function indexAction() {
+        if ($getVariable = $this->request->get('foo')) {
+            echo "Foo is: {$getVariable}";
+        }
+
+        if ($postVariable = $this->request->post('bar')) {
+            echo "Bar is: {$postVariable}";
+        }
+    }
+
+### Actions
+
+Actions are named the same as specified in the URI, are lowercase, and end in `Action`. So the `index` action will be named `indexAction()`.
+
+### Caching
+
+Caching can be turned on or off from your projects configuration file (`/Library/MyProject/config.ini`), and you can set how long you want before the cache is invalidated. You can also select how you would like your cache to be stored: "File", "Apc", or "Memcache".
+
+    [cache]
+        interface = "File"
+        enable    = true
+        life      = 60
+
+### Forwarding
+
+You can forward to another action (or controller) via the `return $this->forward('action', 'controller')` command in a controller.
+
+### Layouts
+
+You can change the layout (layouts are stored in `/Library/MyProject/Layout`, are lowercase, and end with a `.phtml` extension) that will wrap the View by calling the `$this->setLayout('layout')` method in a controllers action.
+
+#### Example
+
+    class Index extends Core\Controller
+    {
+    	public function indexAction() {
+    		$this->setLayout('new-layout');
+    	}
+    }
+
+* * *
+
+### View Scripts
+
+Views are stored in the `/Library/MyProject/View/Script` directory, and each controller has their own directory. So the `Index` controller's views will be stored in `/Library/MyProject/View/Script/Index`. Each of the controllers actions have a separate view, so the `Index` controller's `hello` action will be stored in `/Library/MyProject/View/Script/Index/hello.phtml`.
+
+#### URL generation
+
+The view has a built in method to generate URL's. You can specify the controller, action and any variables. You can also state whether you want to retain the current pages URL variables (disabled by default). This is called via:
+
+    echo $this->url(
+    	array(
+    		'controller'      => 'index',
+    		'action'          => 'hello',
+    		'variables'       => array('foo' => 'bar'),
+    		'variable_retain' => true
+    	)
+    );
+
+#### Safe HTML
+
+You can output HTML to the browser safely by using the `$this->safe(array('string' => 'Evil string'))` method.
+
+### View Helpers and View Partials
+
+Your View Scripts can easily direct logic away from themselves into View Helpers. View helpers can have their own template files, called Partials. For example, the `Test` View Helper:
+
+    return $this->renderPartial('test', array(
+    	'testVar' => $params['testVar']
+    ));
+
+---
+
+## Storage
+
+Every storage method has exactly the same interface; `has`, `put`, `get`, and `remove`. You pass a storage method into the `Store` class and you can then interact with it.
+
+    $store = new Store(new Store\File());
+    $store->put('foo', 'bar');
+    $store->get('foo'); // Echo's "bar"
+
+Some storage methods might require setting up (such as `Memcache`), you can easily do this before passing it into the `Store`.
+
+    $memcache = new Store\Memcache();
+    $memcache->setup($server, $host, $port);
+
+    $store = new Store($memcache);
+    $store->put('foo', 'bar');
+    $store->get('foo'); // Echo's "bar"
+
+The advantages of a single interface is you can very easily switch your storage mechanism without having to change any of the logic.
+
+---
+
+## Profiling
+A powerful in-built profiler will let you know exactly where your application is expending time and additional memory. Its waterfall display allows you to see which functions have been called by whom.
+
+![](https://raw.github.com/chrisjhill/MVC/master/Web/assets/img/profiler.png)
